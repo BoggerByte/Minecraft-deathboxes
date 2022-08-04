@@ -1,0 +1,6 @@
+name: Deathboxes
+version: '${version}'
+main: me.boggerbyte.deathboxes.Main
+api-version: 1.18
+authors: [ BoggerByte ]
+description: Spawns chest with player inventory after death
