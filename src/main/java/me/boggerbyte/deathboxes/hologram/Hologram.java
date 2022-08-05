@@ -1,7 +1,6 @@
 package me.boggerbyte.deathboxes.hologram;
 
 
-import me.boggerbyte.deathboxes.Main;
 import me.boggerbyte.deathboxes.tasks.RenderHologramTimerTask;
 import org.bukkit.Location;
 import org.bukkit.entity.AreaEffectCloud;
@@ -14,19 +13,16 @@ import java.util.Collections;
 import java.util.List;
 
 public class Hologram {
-    private final Plugin plugin = Main.getInstance();
     private final List<String> rawLines;
-    private final int secondsLeft;
 
-    public Hologram(List<String> rawLines, int secondsLeft) {
+    public Hologram(List<String> rawLines) {
         this.rawLines = rawLines;
-        this.secondsLeft = secondsLeft;
     }
 
-    private final List<Entity> currentLines = new ArrayList<>();
-    private final List<BukkitRunnable> currentTasks = new ArrayList<>();
+    private List<Entity> lines = new ArrayList<>();
+    private List<BukkitRunnable> tasks = new ArrayList<>();
 
-    public void spawn(Location location) {
+    public void spawn(Plugin plugin, Location location, int duration) {
         var reversedRawLines = new ArrayList<>(rawLines);
         Collections.reverse(reversedRawLines);
 
@@ -49,25 +45,30 @@ public class Hologram {
             mount = nextLine;
         }
 
-        var rawTimerLines = reversedRawLines.stream()
-                .filter(line -> line.contains("%timer%"))
-                .toList();
-        var timerLines = lines.stream()
-                .filter(line -> rawTimerLines.contains(line.getCustomName()))
-                .toList();
-        List<BukkitRunnable> tasks = new ArrayList<>();
-        for (int i = 0; i < timerLines.size(); i++) {
-            var renderer = new RenderHologramTimerTask(timerLines.get(i), rawTimerLines.get(i), secondsLeft);
-            tasks.add(renderer);
-            renderer.runTaskTimer(plugin, 0, 20);
+        if (duration != -1) {
+            var rawTimerLines = reversedRawLines.stream()
+                    .filter(line -> line.contains("%timer%"))
+                    .toList();
+            var timerLines = lines.stream()
+                    .filter(line -> rawTimerLines.contains(line.getCustomName()))
+                    .toList();
+            List<BukkitRunnable> tasks = new ArrayList<>();
+            for (int i = 0; i < timerLines.size(); i++) {
+                var task = new RenderHologramTimerTask(timerLines.get(i), rawTimerLines.get(i), duration / 20);
+                task.runTaskTimer(plugin, 0, 20);
+                tasks.add(task);
+            }
+
+            this.tasks = tasks;
         }
 
-        currentLines.addAll(lines);
-        currentTasks.addAll(tasks);
+        this.lines = lines;
     }
 
     public void remove() {
-        currentLines.forEach(Entity::remove);
-        currentTasks.forEach(BukkitRunnable::cancel);
+        lines.forEach(Entity::remove);
+        lines.clear();
+        tasks.forEach(BukkitRunnable::cancel);
+        tasks.clear();
     }
 }
