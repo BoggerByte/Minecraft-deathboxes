@@ -8,11 +8,22 @@ import org.bukkit.plugin.Plugin;
 public class DeathboxFactory {
     private final Plugin plugin = Main.getInstance();
 
-    private final String deathboxHologramLayout;
+    private final String hologramLayout;
+    private final boolean storeExp;
+    private final boolean locked;
+    private final boolean breakable;
     private final int duration;
 
-    public DeathboxFactory(String deathboxHologramLayout, int duration) {
-        this.deathboxHologramLayout = deathboxHologramLayout;
+    public DeathboxFactory(
+            String hologramLayout,
+            boolean storeExp,
+            boolean locked,
+            boolean breakable,
+            int duration) {
+        this.hologramLayout = hologramLayout;
+        this.storeExp = storeExp;
+        this.locked = locked;
+        this.breakable = breakable;
         this.duration = duration;
     }
 
@@ -22,11 +33,13 @@ public class DeathboxFactory {
         var contents = owner.getInventory().getContents();
         inventory.setContents(contents);
 
-        var hologramRawLines = deathboxHologramLayout.lines()
+        var exp = storeExp ? owner.getTotalExperience() : 0;
+
+        var hologramRawLines = hologramLayout.lines()
                 .map(line -> line.replace("%player%", owner.getName() + (owner.getName().endsWith("s") ? "'" : "'s")))
                 .toList();
-        var hologram = new Hologram(hologramRawLines, duration / 20);
+        var hologram = new Hologram(hologramRawLines);
 
-        return new Deathbox(inventory, hologram, duration);
+        return new Deathbox(owner, inventory, exp, locked, breakable, hologram, duration);
     }
 }

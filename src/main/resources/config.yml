@@ -1,0 +1,22 @@
+deathbox:
+  hologram-layout: "&c&l%player%&r deathbox\n&7despawn after:&r %timer%"
+  duration: 400 # -1 if forever
+  store-exp: false
+  locked: false
+  breakable: true
+
+lifecycle:
+  spawn:
+    if-empty: false
+    effect: ""
+  land:
+    effect: ""
+  despawn:
+    if-server-reloads: true
+    if-empty: true
+    drop-items: false
+    effect: ""
+  destroy:
+    if-server-reloads: true
+    drop-items: true
+    effect: ""
