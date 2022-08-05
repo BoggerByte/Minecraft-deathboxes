@@ -5,6 +5,7 @@ import me.boggerbyte.deathboxes.hologram.Hologram;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
@@ -26,21 +27,19 @@ public class Deathbox {
     }
 
     public void spawn(Location location) {
-        var spawnLocation = location.toBlockLocation();
+        var spawnLocation = location.getBlock().getLocation();
 
         var fallingBlock = spawnLocation.getWorld().spawnFallingBlock(spawnLocation, Material.CHEST.createBlockData());
         fallingBlock.setHurtEntities(false);
         fallingBlock.setDropItem(false);
         fallingBlock.setMetadata(Deathbox.metadataKey, new FixedMetadataValue(plugin, this));
-//      fallingBlock.addPassenger(hologramFactory.getMount());
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> destroy(false), duration);
     }
 
     public void destroy(boolean dropContents) {
         hologram.remove();
-        inventory.close();
-        inventory.close();
+        inventory.getViewers().forEach(HumanEntity::closeInventory);
 
         if (block != null) {
             block.setType(Material.AIR);

@@ -1,14 +1,13 @@
 package me.boggerbyte.deathboxes.tasks;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class RenderHologramTimerTask extends BukkitRunnable {
     private final Entity timerLine;
-    private final Component rawTimerLine;
+    private final String rawTimerLine;
 
-    public RenderHologramTimerTask(Entity timerLine, Component rawTimerLine, int secondsLeft) {
+    public RenderHologramTimerTask(Entity timerLine, String rawTimerLine, int secondsLeft) {
         this.timerLine = timerLine;
         this.rawTimerLine = rawTimerLine;
 
@@ -21,11 +20,8 @@ public class RenderHologramTimerTask extends BukkitRunnable {
     public void run() {
         if (secondsLeft < 0) cancel();
 
-        var line = rawTimerLine.replaceText(config -> {
-            config.match("%timer%");
-            config.replacement(Component.text(secondsLeft).append(Component.text("s")));
-        });
-        timerLine.customName(line);
+        var line = rawTimerLine.replace("%timer%", String.format("%ds", secondsLeft));
+        timerLine.setCustomName(line);
 
         secondsLeft--;
     }

@@ -7,6 +7,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -32,7 +33,7 @@ public class DeathboxEventsListener implements Listener {
         event.setCancelled(true);
 
         deathbox.setBlock(event.getBlock());
-        deathbox.getHologram().spawn(event.getBlock().getLocation().toCenterLocation());
+        deathbox.getHologram().spawn(event.getBlock().getLocation());
 
         event.getEntity().remove();
         event.getBlock().setType(Material.CHEST);
@@ -48,11 +49,11 @@ public class DeathboxEventsListener implements Listener {
 
         event.setCancelled(true);
 
-        if (event.getAction().isLeftClick()) {
+        if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             deathbox.destroy(true);
             block.getWorld().playSound(block.getLocation(), Sound.BLOCK_WOOD_BREAK, 0.8f, 1);
         }
-        if (event.getAction().isRightClick()) {
+        if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             event.getPlayer().openInventory(deathbox.getInventory());
             block.getWorld().playSound(block.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.8f, 1);
         }

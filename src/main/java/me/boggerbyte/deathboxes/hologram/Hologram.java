@@ -3,8 +3,6 @@ package me.boggerbyte.deathboxes.hologram;
 
 import me.boggerbyte.deathboxes.Main;
 import me.boggerbyte.deathboxes.tasks.RenderHologramTimerTask;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Entity;
@@ -17,10 +15,10 @@ import java.util.List;
 
 public class Hologram {
     private final Plugin plugin = Main.getInstance();
-    private final List<Component> rawLines;
+    private final List<String> rawLines;
     private final int secondsLeft;
 
-    public Hologram(List<Component> rawLines, int secondsLeft) {
+    public Hologram(List<String> rawLines, int secondsLeft) {
         this.rawLines = rawLines;
         this.secondsLeft = secondsLeft;
     }
@@ -33,13 +31,13 @@ public class Hologram {
         Collections.reverse(reversedRawLines);
 
         List<Entity> lines = new ArrayList<>();
-        for (Component reversedRawLine : reversedRawLines) {
+        for (String reversedRawLine : reversedRawLines) {
             var line = location.getWorld().spawn(location, AreaEffectCloud.class);
             line.setWaitTime(0);
             line.setRadius(0);
             line.setDuration(Integer.MAX_VALUE);
             line.setCustomNameVisible(true);
-            line.customName(reversedRawLine);
+            line.setCustomName(reversedRawLine);
             lines.add(line);
         }
 
@@ -52,10 +50,10 @@ public class Hologram {
         }
 
         var rawTimerLines = reversedRawLines.stream()
-                .filter(line -> PlainTextComponentSerializer.plainText().serialize(line).contains("%timer%"))
+                .filter(line -> line.contains("%timer%"))
                 .toList();
         var timerLines = lines.stream()
-                .filter(line -> rawTimerLines.contains(line.customName()))
+                .filter(line -> rawTimerLines.contains(line.getCustomName()))
                 .toList();
         List<BukkitRunnable> tasks = new ArrayList<>();
         for (int i = 0; i < timerLines.size(); i++) {
