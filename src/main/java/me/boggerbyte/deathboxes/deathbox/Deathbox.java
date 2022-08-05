@@ -1,69 +1,100 @@
 package me.boggerbyte.deathboxes.deathbox;
 
-import me.boggerbyte.deathboxes.Main;
 import me.boggerbyte.deathboxes.hologram.Hologram;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 
 public class Deathbox {
-    public static final String metadataKey = "deathbox";
+    public static final String metadataKey = "deathboxes_deathbox";
 
-    private final Plugin plugin = Main.getInstance();
+    private final Player owner;
     private final Inventory inventory;
-    private final int duration;
+    private final int exp;
+    private final boolean locked;
+    private final boolean breakable;
     private final Hologram hologram;
+    private final int duration;
 
-    private Block block;
-
-    public Deathbox(Inventory inventory, Hologram hologram, int duration) {
+    public Deathbox(
+            Player owner,
+            Inventory inventory,
+            int exp,
+            boolean locked,
+            boolean breakable,
+            Hologram hologram,
+            int duration
+    ) {
+        this.owner = owner;
         this.inventory = inventory;
+        this.exp = exp;
+        this.locked = locked;
+        this.breakable = breakable;
         this.hologram = hologram;
         this.duration = duration;
     }
 
-    public void spawn(Location location) {
-        var spawnLocation = location.getBlock().getLocation();
+    private Block block;
+    private boolean sealed = true;
 
-        var fallingBlock = spawnLocation.getWorld().spawnFallingBlock(spawnLocation, Material.CHEST.createBlockData());
+    public void spawnFalling(Plugin plugin, Location location) {
+        var blockLocation = location.getBlock().getLocation();
+
+        var fallingBlock = blockLocation.getWorld().spawnFallingBlock(blockLocation, Material.ANVIL.createBlockData());
         fallingBlock.setHurtEntities(false);
         fallingBlock.setDropItem(false);
         fallingBlock.setMetadata(Deathbox.metadataKey, new FixedMetadataValue(plugin, this));
-
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> destroy(false), duration);
     }
 
-    public void destroy(boolean dropContents) {
-        hologram.remove();
-        inventory.getViewers().forEach(HumanEntity::closeInventory);
+    public void spawn(Plugin plugin, Location location) {
+        block = location.getBlock();
+        block.setType(Material.CHEST);
+        block.setMetadata(Deathbox.metadataKey, new FixedMetadataValue(plugin, this));
 
-        if (block != null) {
-            block.setType(Material.AIR);
-            block.removeMetadata(metadataKey, plugin);
-        }
+        var blockLocation = block.getLocation();
+        var blockCenterLocation = blockLocation.add(blockLocation.getX() > 0 ? -0.5 : 0.5, 0.5, blockLocation.getZ() > 0 ? -0.5 : 0.5);
+        hologram.spawn(plugin, blockCenterLocation, duration);
+
+        if (duration != -1) plugin.getServer().getScheduler()
+                .runTaskLater(plugin, () -> despawn(plugin, false), duration);
+    }
+
+    public void despawn(Plugin plugin, boolean dropContents) {
+        hologram.remove();
+
+        if (block == null) return;
+        block.setType(Material.AIR);
+        block.removeMetadata(Deathbox.metadataKey, plugin);
 
         if (dropContents) inventory.forEach(item -> {
             if (item != null) block.getWorld().dropItemNaturally(block.getLocation(), item);
         });
     }
 
-    public Block getBlock() {
-        return block;
+    public void openInventory(HumanEntity humanEntity) {
+        humanEntity.openInventory(inventory);
+
+        if (sealed && humanEntity instanceof Player player) {
+            player.giveExp(exp);
+            sealed = false;
+        }
     }
 
-    public void setBlock(Block block) {
-        this.block = block;
+    public Player getOwner() {
+        return owner;
     }
 
-    public Hologram getHologram() {
-        return hologram;
+    public boolean isLocked() {
+        return locked;
     }
 
-    public Inventory getInventory() {
-        return inventory;
+    public boolean isBreakable() {
+        return breakable;
     }
+
 }
